@@ -1,15 +1,17 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'app_database.dart';
 import 'airplane.dart';
+import 'localization.dart';
 
 class AirplaneDetailPage extends StatefulWidget {
   final AppDatabase database;
   final Airplane? airplane;
+  final Function(Locale) changeLanguage;
 
-  AirplaneDetailPage({required this.database, this.airplane});
+  AirplaneDetailPage({required this.database, this.airplane, required this.changeLanguage});
 
   @override
   _AirplaneDetailPageState createState() => _AirplaneDetailPageState();
@@ -74,11 +76,38 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    var localization = Localization.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.black87,
         elevation: 0,
-        title: Text(widget.airplane == null ? 'Add Airplane' : 'Edit Airplane', style: TextStyle(color: Colors.white)),
+        title: Text(widget.airplane == null ? localization.translate('add_airplane') : localization.translate('edit_airplane'), style: TextStyle(color: Colors.white)),
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              switch (value) {
+                case 'en_US':
+                  widget.changeLanguage(Locale('en', 'US'));
+                  break;
+                case 'en_GB':
+                  widget.changeLanguage(Locale('en', 'GB'));
+                  break;
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                PopupMenuItem<String>(
+                  value: 'en_US',
+                  child: Text('English (US)'),
+                ),
+                PopupMenuItem<String>(
+                  value: 'en_GB',
+                  child: Text('English (UK)'),
+                ),
+              ];
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -111,7 +140,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                     TextFormField(
                       controller: _typeController,
                       decoration: InputDecoration(
-                        labelText: 'Type',
+                        labelText: localization.translate('type'),
                         filled: true,
                         fillColor: Colors.grey.withOpacity(0.8),
                         border: OutlineInputBorder(
@@ -120,7 +149,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a type';
+                          return localization.translate('error_fill_all_fields');
                         }
                         return null;
                       },
@@ -129,7 +158,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                     TextFormField(
                       controller: _passengersController,
                       decoration: InputDecoration(
-                        labelText: 'Passengers',
+                        labelText: localization.translate('passengers'),
                         filled: true,
                         fillColor: Colors.grey.withOpacity(0.8),
                         border: OutlineInputBorder(
@@ -139,10 +168,10 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter the number of passengers';
+                          return localization.translate('error_fill_all_fields');
                         }
                         if (int.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return localization.translate('error_fill_all_fields');
                         }
                         return null;
                       },
@@ -151,7 +180,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                     TextFormField(
                       controller: _speedController,
                       decoration: InputDecoration(
-                        labelText: 'Speed',
+                        labelText: localization.translate('speed'),
                         filled: true,
                         fillColor: Colors.grey.withOpacity(0.8),
                         border: OutlineInputBorder(
@@ -161,10 +190,10 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter the speed';
+                          return localization.translate('error_fill_all_fields');
                         }
                         if (int.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return localization.translate('error_fill_all_fields');
                         }
                         return null;
                       },
@@ -173,7 +202,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                     TextFormField(
                       controller: _rangeController,
                       decoration: InputDecoration(
-                        labelText: 'Range',
+                        labelText: localization.translate('range'),
                         filled: true,
                         fillColor: Colors.grey.withOpacity(0.8),
                         border: OutlineInputBorder(
@@ -183,10 +212,10 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                       keyboardType: TextInputType.number,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter the range';
+                          return localization.translate('error_fill_all_fields');
                         }
                         if (int.tryParse(value) == null) {
-                          return 'Please enter a valid number';
+                          return localization.translate('error_fill_all_fields');
                         }
                         return null;
                       },
@@ -194,7 +223,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
                     SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _saveAirplane,
-                      child: Text('Save'),
+                      child: Text(localization.translate('save')),
                     ),
                   ],
                 ),
