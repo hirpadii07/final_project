@@ -6,22 +6,39 @@ import 'app_database.dart';
 import 'airplane.dart';
 import 'localization.dart';
 
+/// A page for adding or editing an airplane.
 class AirplaneDetailPage extends StatefulWidget {
+  /// The database instance.
   final AppDatabase database;
+
+  /// The airplane to be edited, or null if adding a new airplane.
   final Airplane? airplane;
+
+  /// Function to change the application language.
   final Function(Locale) changeLanguage;
 
+  /// Creates an instance of AirplaneDetailPage.
   AirplaneDetailPage({required this.database, this.airplane, required this.changeLanguage});
 
   @override
   _AirplaneDetailPageState createState() => _AirplaneDetailPageState();
 }
 
+/// The state class for [AirplaneDetailPage].
 class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
+  /// The form key for validating the form.
   final _formKey = GlobalKey<FormState>();
+
+  /// Controller for the airplane type field.
   late TextEditingController _typeController;
+
+  /// Controller for the passengers field.
   late TextEditingController _passengersController;
+
+  /// Controller for the speed field.
   late TextEditingController _speedController;
+
+  /// Controller for the range field.
   late TextEditingController _rangeController;
 
   @override
@@ -42,6 +59,7 @@ class _AirplaneDetailPageState extends State<AirplaneDetailPage> {
     super.dispose();
   }
 
+  /// Saves the airplane to the database.
   Future<void> _saveAirplane() async {
     if (_formKey.currentState!.validate()) {
       final type = _typeController.text;

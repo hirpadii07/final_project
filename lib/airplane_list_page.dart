@@ -7,20 +7,31 @@ import 'airplane_detail_page.dart';
 import 'airplane.dart';
 import 'localization.dart';
 
+/// A widget that displays a list of airplanes.
 class AirplaneListPage extends StatefulWidget {
+  /// The database instance.
   final AppDatabase database;
+
+  /// Function to change the application language.
   final Function(Locale) changeLanguage;
 
+  /// Creates an instance of AirplaneListPage.
   AirplaneListPage({required this.database, required this.changeLanguage});
 
   @override
   _AirplaneListPageState createState() => _AirplaneListPageState();
 }
 
+/// The state class for [AirplaneListPage].
 class _AirplaneListPageState extends State<AirplaneListPage> {
-  late Future<List<Airplane>> _airplanes = Future.value([]); // Initialize with an empty list
+  /// A future that resolves to the list of airplanes.
+  late Future<List<Airplane>> _airplanes = Future.value([]);
+
+  /// Secure storage instance for storing airplane data.
   final FlutterSecureStorage secureStorage = FlutterSecureStorage();
-  Airplane? selectedAirplane; // Track the selected airplane for larger screens
+
+  /// The selected airplane for larger screens.
+  Airplane? selectedAirplane;
 
   @override
   void initState() {
@@ -28,6 +39,7 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
     _loadAirplanes();
   }
 
+  /// Loads airplanes from secure storage or the database.
   void _loadAirplanes() async {
     final airplanesString = await secureStorage.read(key: 'airplanes');
     if (airplanesString != null) {
@@ -46,6 +58,7 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
     }
   }
 
+  /// Saves airplanes to secure storage.
   Future<void> _saveAirplanes(List<Airplane> airplanes) async {
     final jsonList = airplanes.map((airplane) => airplane.toJson()).toList();
     final airplanesString = jsonEncode(jsonList);
@@ -144,7 +157,10 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => AirplaneDetailPage(database: widget.database, changeLanguage: widget.changeLanguage),
+              builder: (context) => AirplaneDetailPage(
+                database: widget.database,
+                changeLanguage: widget.changeLanguage,
+              ),
             ),
           );
           _loadAirplanes();
@@ -153,6 +169,7 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
     );
   }
 
+  /// Builds the list view of airplanes.
   Widget _buildListView(BuildContext context, Localization localization) {
     return Stack(
       children: [
@@ -196,7 +213,11 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AirplaneDetailPage(database: widget.database, airplane: airplane, changeLanguage: widget.changeLanguage),
+                                  builder: (context) => AirplaneDetailPage(
+                                    database: widget.database,
+                                    airplane: airplane,
+                                    changeLanguage: widget.changeLanguage,
+                                  ),
                                 ),
                               );
                               _loadAirplanes();
@@ -222,7 +243,11 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => AirplaneDetailPage(database: widget.database, airplane: airplane, changeLanguage: widget.changeLanguage),
+                              builder: (context) => AirplaneDetailPage(
+                                database: widget.database,
+                                airplane: airplane,
+                                changeLanguage: widget.changeLanguage,
+                              ),
                             ),
                           );
                         }
@@ -231,7 +256,11 @@ class _AirplaneListPageState extends State<AirplaneListPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => AirplaneDetailPage(database: widget.database, airplane: airplane, changeLanguage: widget.changeLanguage),
+                            builder: (context) => AirplaneDetailPage(
+                              database: widget.database,
+                              airplane: airplane,
+                              changeLanguage: widget.changeLanguage,
+                            ),
                           ),
                         );
                       },

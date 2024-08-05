@@ -8,15 +8,19 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 import 'dart:async';
 import 'localization.dart';
 
+/// The entry point of the application.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final database = await $FloorAppDatabase.databaseBuilder('app_database.db').build();
   runApp(MyApp(database: database));
 }
 
+/// The root widget of the application.
 class MyApp extends StatefulWidget {
+  /// The database instance.
   final AppDatabase database;
 
+  /// Creates an instance of MyApp.
   MyApp({required this.database});
 
   @override
@@ -24,8 +28,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  /// The current locale of the application.
   Locale _locale = Locale('en', 'US');
 
+  /// Changes the language of the application.
   void _changeLanguage(Locale locale) {
     setState(() {
       _locale = locale;
