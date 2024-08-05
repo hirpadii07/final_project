@@ -1,22 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sembast/sembast.dart';
 import 'package:sembast_web/sembast_web.dart';
-import 'package:cst2335_summer24/reservation_page.dart';
+import 'reservation_page.dart';
+import 'app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize sembast database for web
+  // Initialize the sembast database for web
   final factory = databaseFactoryWeb;
   final db = await factory.openDatabase('app_database.db');
 
   runApp(MyApp(database: db));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final Database database;
 
   MyApp({required this.database});
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale _locale = Locale('en');
+
+  void _changeLanguage(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +40,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: ReservationPage(database: database),
+      locale: _locale,
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en', ''), // English
+        const Locale('fr', ''), // French
+      ],
+      home: ReservationPage(
+        database: widget.database,
+        onLanguageChanged: _changeLanguage,
+      ),
     );
   }
 }
