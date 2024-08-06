@@ -1,3 +1,10 @@
+
+name: final_project_android
+description: A Flutter project for managing customers.
+
+environment:
+  sdk: '>=2.17.0 <4.0.0' # Ensure compatibility with null safety
+
 name: airplane_management
 description: A Flutter application for managing airplanes.
 version: 1.0.0+1
@@ -5,9 +12,23 @@ version: 1.0.0+1
 environment:
   sdk: ">=2.17.0 <3.0.0" # Ensure this matches your Dart SDK version
 
+
 dependencies:
   flutter:
     sdk: flutter
+
+  flutter_localizations:
+    sdk: flutter
+  sqflite: ^2.2.8+4 # Ensure it's a null-safe version
+  path: ^1.8.3
+  shared_preferences: ^2.2.0 # Updated to the latest version
+  floor: ^1.1.0
+  floor_generator: ^1.1.0
+  sembast: ^3.1.1
+  sembast_web: ^2.4.0+2 # Use the latest version that is compatible
+  flutter_secure_storage: ^6.0.0 # Secure storage for credentials
+  json_annotation: ^4.8.1 # Latest compatible version
+
   cupertino_icons: ^1.0.2
   floor: ^1.4.0
   sqflite: ^2.0.0+4
@@ -17,9 +38,14 @@ dependencies:
   flutter_localizations: # For localization support
     sdk: flutter
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  build_runner: ^2.4.4 # Updated to the latest version
+  json_serializable: ^6.6.2 # Updated to the latest version
+
   build_runner: ^2.3.2 # For code generation for Floor
   floor_generator: ^1.4.0 # Floor generator for code generation
 

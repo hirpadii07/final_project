@@ -72,10 +72,6 @@ class _$AppDatabase extends AppDatabase {
     changeListener = listener ?? StreamController<String>.broadcast();
   }
 
-
-  ItemDao? _itemDaoInstance;
-
-
   AirplaneDao? _airplaneDaoInstance;
 
   Future<sqflite.Database> open(
@@ -100,10 +96,6 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-
-            'CREATE TABLE IF NOT EXISTS `items` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY (`id`))');
-        await database.execute(
-
             'CREATE TABLE IF NOT EXISTS `Airplane` (`id` INTEGER NOT NULL, `type` TEXT NOT NULL, `passengers` INTEGER NOT NULL, `speed` INTEGER NOT NULL, `range` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
@@ -113,48 +105,10 @@ class _$AppDatabase extends AppDatabase {
   }
 
   @override
-
-  ItemDao get itemDao {
-    return _itemDaoInstance ??= _$ItemDao(database, changeListener);
-  }
-
-  @override
-
-
   AirplaneDao get airplaneDao {
     return _airplaneDaoInstance ??= _$AirplaneDao(database, changeListener);
   }
 }
-
-class _$ItemDao extends ItemDao {
-  _$ItemDao(
-    this.database,
-    this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database),
-        _itemInsertionAdapter = InsertionAdapter(database, 'items',
-            (Item item) => <String, Object?>{'id': item.id, 'name': item.name});
-
-  final sqflite.DatabaseExecutor database;
-
-  final StreamController<String> changeListener;
-
-  final QueryAdapter _queryAdapter;
-
-  final InsertionAdapter<Item> _itemInsertionAdapter;
-
-  @override
-  Future<List<Item>> findAllItems() async {
-    return _queryAdapter.queryList('SELECT * FROM items',
-        mapper: (Map<String, Object?> row) =>
-            Item(row['id'] as int, row['name'] as String));
-  }
-
-  @override
-  Future<void> insertItem(Item item) async {
-    await _itemInsertionAdapter.insert(item, OnConflictStrategy.abort);
-  }
-}
-
 
 class _$AirplaneDao extends AirplaneDao {
   _$AirplaneDao(
