@@ -72,7 +72,9 @@ class _$AppDatabase extends AppDatabase {
     changeListener = listener ?? StreamController<String>.broadcast();
   }
 
+
   ItemDao? _itemDaoInstance;
+
 
   AirplaneDao? _airplaneDaoInstance;
 
@@ -98,8 +100,10 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
+
             'CREATE TABLE IF NOT EXISTS `items` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
+
             'CREATE TABLE IF NOT EXISTS `Airplane` (`id` INTEGER NOT NULL, `type` TEXT NOT NULL, `passengers` INTEGER NOT NULL, `speed` INTEGER NOT NULL, `range` INTEGER NOT NULL, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
@@ -109,11 +113,14 @@ class _$AppDatabase extends AppDatabase {
   }
 
   @override
+
   ItemDao get itemDao {
     return _itemDaoInstance ??= _$ItemDao(database, changeListener);
   }
 
   @override
+
+
   AirplaneDao get airplaneDao {
     return _airplaneDaoInstance ??= _$AirplaneDao(database, changeListener);
   }
@@ -147,6 +154,7 @@ class _$ItemDao extends ItemDao {
     await _itemInsertionAdapter.insert(item, OnConflictStrategy.abort);
   }
 }
+
 
 class _$AirplaneDao extends AirplaneDao {
   _$AirplaneDao(
