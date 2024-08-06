@@ -21,6 +21,7 @@ class _ReservationPageState extends State<ReservationPage> {
   bool _isAddingReservation = false;
   final _secureStorage = const FlutterSecureStorage();
   Locale _currentLocale = Locale('en');
+  Map<String, dynamic>? _selectedReservation;
 
   @override
   void initState() {
@@ -48,36 +49,30 @@ class _ReservationPageState extends State<ReservationPage> {
   Future<void> _deleteReservation(int id) async {
     await store.record(id).delete(widget.database);
     _loadReservations();
+    setState(() {
+      _selectedReservation = null;
+    });
   }
 
-  void _showReservationDetails(Map<String, dynamic> reservation, int id) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(AppLocalizations.of(context).getTranslatedValue('reservationDetails') ?? 'Reservation Details'),
-          content: Text(
-              '${AppLocalizations.of(context).getTranslatedValue('customer') ?? 'Customer'}: ${reservation['customer']}\n'
-                  '${AppLocalizations.of(context).getTranslatedValue('flight') ?? 'Flight'}: ${reservation['flight']}\n'
-                  '${AppLocalizations.of(context).getTranslatedValue('date') ?? 'Date'}: ${reservation['date']}'),
-          actions: [
-            TextButton(
-              child: Text(AppLocalizations.of(context).getTranslatedValue('delete') ?? 'Delete'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteReservation(id);
-              },
-            ),
-            TextButton(
-              child: Text(AppLocalizations.of(context).getTranslatedValue('ok') ?? 'OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+  void _showReservationDetails(BuildContext context, Map<String, dynamic> reservation, int id) {
+    setState(() {
+      _selectedReservation = reservation;
+    });
+
+    if (MediaQuery.of(context).size.width < 600) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReservationDetailPage(
+            reservation: reservation,
+            onDelete: () {
+              Navigator.of(context).pop();
+              _deleteReservation(id);
+            },
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _loadPreferences() async {
@@ -91,7 +86,7 @@ class _ReservationPageState extends State<ReservationPage> {
 
   void _changeLanguage(Locale? locale) {
     if (locale != null) {
-      widget.onLanguageChanged?.call(locale);
+      widget.onLanguageChanged.call(locale);
     }
   }
 
@@ -157,50 +152,121 @@ class _ReservationPageState extends State<ReservationPage> {
                 color: Colors.black.withOpacity(0.1),
               ),
             ),
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _reservations.length,
-                    itemBuilder: (context, index) {
-                      final reservation = _reservations[index];
-                      return ListTile(
-                        title: Text('${reservation.value['customer']} - ${reservation.value['flight']}'),
-                        subtitle: Text(reservation.value['date']),
-                        onTap: () => _showReservationDetails(reservation.value, reservation.key),
-                      );
-                    },
-                  ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  child: Text(AppLocalizations.of(context).getTranslatedValue('addReservation') ?? 'Add Reservation'),
-                  onPressed: () async {
-                    setState(() {
-                      _isAddingReservation = true;
-                    });
-                    final result = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => AddReservationPage(
-                            onLanguageChanged: widget.onLanguageChanged,
-                          )),
-                    );
-                    setState(() {
-                      _isAddingReservation = false;
-                    });
-                    if (result != null) {
-                      await _secureStorage.write(key: 'lastCustomer', value: result['customer']);
-                      _addReservation(result);
-                    }
-                  },
-                ),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 600) {
+                return Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: _buildReservationList(context),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: _selectedReservation != null
+                          ? ReservationDetailPage(
+                        reservation: _selectedReservation!,
+                        onDelete: () => _deleteReservation(
+                            _reservations.firstWhere((element) => element.value == _selectedReservation).key),
+                      )
+                          : Center(
+                        child: Text(
+                          AppLocalizations.of(context).getTranslatedValue('selectReservation') ?? 'Select a reservation to view details',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              } else {
+                return _buildReservationList(context);
+              }
+            },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () async {
+          setState(() {
+            _isAddingReservation = true;
+          });
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => AddReservationPage(
+                  onLanguageChanged: widget.onLanguageChanged,
+                )),
+          );
+          setState(() {
+            _isAddingReservation = false;
+          });
+          if (result != null) {
+            await _secureStorage.write(key: 'lastCustomer', value: result['customer']);
+            _addReservation(result);
+          }
+        },
+      ),
+    );
+  }
+
+  Widget _buildReservationList(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(16.0),
+      child: ListView.builder(
+        itemCount: _reservations.length,
+        itemBuilder: (context, index) {
+          final reservation = _reservations[index];
+          return ListTile(
+            title: Text('${reservation.value['customer']} - ${reservation.value['flight']}'),
+            subtitle: Text(reservation.value['date']),
+            onTap: () => _showReservationDetails(context, reservation.value, reservation.key),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class ReservationDetailPage extends StatelessWidget {
+  final Map<String, dynamic> reservation;
+  final VoidCallback onDelete;
+
+  ReservationDetailPage({required this.reservation, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Reservation Details'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Customer: ${reservation['customer']}',
+              style: TextStyle(fontSize: 18),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Flight: ${reservation['flight']}',
+              style: TextStyle(fontSize: 18),
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Date: ${reservation['date']}',
+              style: TextStyle(fontSize: 18),
+            ),
+          ],
+        ),
       ),
     );
   }

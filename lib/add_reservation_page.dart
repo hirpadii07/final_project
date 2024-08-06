@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,10 +18,9 @@ class AddReservationPage extends StatefulWidget {
 class _AddReservationPageState extends State<AddReservationPage> {
   final TextEditingController _customerController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _flightController = TextEditingController();
 
-  List<Map<String, String>> _flights = [];
-  List<Map<String, String>> _filteredFlights = [];
-  String? _selectedFlight;
+  List<String> _flights = [];
   String? _departureCity;
   String? _destinationCity;
 
@@ -38,50 +38,17 @@ class _AddReservationPageState extends State<AddReservationPage> {
     _loadFlights();
   }
 
-  /// Loads flights from shared preferences.
+  /// Loads flights from shared preferences or initializes them.
   void _loadFlights() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String>? flightList = prefs.getStringList('flights');
     if (flightList != null) {
       setState(() {
-        _flights = flightList
-            .map((e) => Map<String, String>.from(json.decode(e)))
-            .toList();
+        _flights = flightList;
       });
     } else {
-      // Initialize with some predefined flights if no flights are saved in SharedPreferences
-      _flights = [
-        {
-          'flightNumber': 'AC 456',
-          'route': 'Toronto to Vancouver',
-          'time': '08:00 AM'
-        },
-        {
-          'flightNumber': 'AC 457',
-          'route': 'Toronto to Vancouver',
-          'time': '12:00 PM'
-        },
-        {
-          'flightNumber': 'AC 345',
-          'route': 'Toronto to Vancouver',
-          'time': '06:00 PM'
-        },
-        {
-          'flightNumber': 'AC 123',
-          'route': 'Toronto to Montreal',
-          'time': '09:00 AM'
-        },
-        {
-          'flightNumber': 'AC 124',
-          'route': 'Toronto to Montreal',
-          'time': '03:00 PM'
-        },
-        {
-          'flightNumber': 'AC 125',
-          'route': 'Toronto to Calgary',
-          'time': '11:00 AM'
-        },
-      ];
+      // Generate random flight numbers for predefined routes
+      _flights = _generateRandomFlights();
       _saveFlights();
     }
   }
@@ -89,27 +56,29 @@ class _AddReservationPageState extends State<AddReservationPage> {
   /// Saves flights to shared preferences.
   void _saveFlights() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> flightList = _flights.map((e) => json.encode(e)).toList();
-    prefs.setStringList('flights', flightList);
+    prefs.setStringList('flights', _flights);
   }
 
-  /// Filters flights based on selected departure and destination cities.
-  void _filterFlights() {
-    if (_departureCity != null && _destinationCity != null) {
-      setState(() {
-        _filteredFlights = _flights
-            .where((flight) =>
-        flight['route'] == '$_departureCity to $_destinationCity')
-            .toList();
-        _selectedFlight = null;
-      });
+  /// Generates random flights with numbers for predefined routes.
+  List<String> _generateRandomFlights() {
+    final random = Random();
+    List<String> flights = [];
+    for (var i = 0; i < 20; i++) {
+      final departureCity = _cities[random.nextInt(_cities.length)];
+      final destinationCity = _cities[random.nextInt(_cities.length)];
+      if (departureCity != destinationCity) {
+        final flightNumber = 'AC${random.nextInt(900) + 100}';
+        final route = '$departureCity to $destinationCity';
+        flights.add('$flightNumber - $route');
+      }
     }
+    return flights;
   }
 
   /// Submits the reservation.
   void _submitReservation() {
     if (_customerController.text.isEmpty ||
-        _selectedFlight == null ||
+        _flightController.text.isEmpty ||
         _dateController.text.isEmpty) {
       _showSnackbar(AppLocalizations.of(context).getTranslatedValue('fillAllFields') ?? 'Please fill all fields');
       return;
@@ -122,7 +91,7 @@ class _AddReservationPageState extends State<AddReservationPage> {
 
     final reservation = {
       'customer': _customerController.text,
-      'flight': _selectedFlight!,
+      'flight': _flightController.text,
       'date': _dateController.text,
     };
 
@@ -143,7 +112,7 @@ class _AddReservationPageState extends State<AddReservationPage> {
 
   void _changeLanguage(Locale? locale) {
     if (locale != null) {
-      widget.onLanguageChanged?.call(locale);
+      widget.onLanguageChanged.call(locale);
     }
   }
 
@@ -205,7 +174,6 @@ class _AddReservationPageState extends State<AddReservationPage> {
                   onChanged: (value) {
                     setState(() {
                       _departureCity = value;
-                      _filterFlights();
                     });
                   },
                   decoration: InputDecoration(
@@ -226,7 +194,6 @@ class _AddReservationPageState extends State<AddReservationPage> {
                   onChanged: (value) {
                     setState(() {
                       _destinationCity = value;
-                      _filterFlights();
                     });
                   },
                   decoration: InputDecoration(
@@ -235,24 +202,16 @@ class _AddReservationPageState extends State<AddReservationPage> {
                   ),
                 ),
                 SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  value: _selectedFlight,
-                  hint: Text(AppLocalizations.of(context).getTranslatedValue('selectFlight') ?? 'Select Flight'),
-                  items: _filteredFlights.map((flight) {
-                    return DropdownMenuItem<String>(
-                      value: flight['flightNumber'],
-                      child: Text('${flight['flightNumber']} - ${flight['route']} at ${flight['time']}'),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedFlight = value;
-                    });
-                  },
+                TextFormField(
+                  controller: _flightController,
                   decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).getTranslatedValue('enterFlightNumber') ?? 'Enter Flight Number',
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.7),
                   ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                  ],
                 ),
                 SizedBox(height: 10),
                 TextField(
